@@ -1,0 +1,12 @@
+
+bcrypt==4.0.1
+cryptography==3.4.8
+fastapi==0.95.0
+pydantic==1.10.7
+pymongo==4.3.3
+python-jose==3.3.0
+python-multipart==0.0.6
+requests==2.25.1
+requests-file==1.5.1
+uvicorn==0.21.1
+
