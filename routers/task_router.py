@@ -13,7 +13,8 @@ task_router = APIRouter(prefix="/tasks",
 
 
 @task_router.post("/create")
-async def create_task(task: dict, user: UserDB = Depends(current_user)) -> TaskUser:
+async def create_task(task: dict,
+                      user: UserDB = Depends(current_user)) -> TaskUser:
     """_summary_
 
     Args:
@@ -21,7 +22,7 @@ async def create_task(task: dict, user: UserDB = Depends(current_user)) -> TaskU
         user (UserDB): user authenticated
 
     Returns:
-        dict: Task created
+        TaskUser: Task created
     """
     task["username"] = user.username
     task["name"] = user.full_name
@@ -32,23 +33,52 @@ async def create_task(task: dict, user: UserDB = Depends(current_user)) -> TaskU
 
 
 @task_router.delete("/delete/{task_id}")
-async def delete_task(task_id: str, user: UserDB = Depends(current_user)):
+async def delete_task(task_id: str, user: UserDB = Depends(current_user)) -> dict:
+    """
+
+    Args:
+        task_id (str): this is id task to delete
+        user (UserDB):  user authenticated
+
+    Returns:
+        messague (dict): Confirmation delete
+    """
     try:
         task = database_list.find_one({"_id": ObjectId(task_id)})
         if task["username"] == user.username:
             database_list.delete_one({"_id": ObjectId(task_id)})
-            return {"messague": "tarea eliminada corectamente"}
+            messague = {"messague": "task delete"}
+            return messague
+        else:
+            return {"messague": "this task does not belong to you"}
     except:
-        raise HTTPException(status_code=400, detail="Error al eliminar la tarea")
+        raise HTTPException(status_code=400, detail="Error to delete taks")
 
 
 @task_router.put("/update/{id}")
 async def update_task(id: str, task: dict, user: UserDB = Depends(current_user)) -> dict:
+    """
+
+    Args:
+        id (str): this is id the task to update
+        task (dict): New information for task
+        user (UserDB): User authenticated
+
+    Returns:
+        messague (dict): Confirmation update
+    """
     try:
-        database_list.update_one({"_id": ObjectId(id)}, {"$set": {"affair": task["affair"]}})
-    except:
-        raise HTTPException(status_code=400, detail="Id de tarea invalido")
-    return {"messgue": "actualziado correctamente"}
+        task_db = database_list.find_one({"_id": ObjectId(id)})
+        task_db = task_convert(task_db)
+        if task_db["username"] == user.username:
+            database_list.update_one({"_id": ObjectId(id)}, {"$set": {"affair": task["affair"]}})
+
+            return {"messgue": "task update"}
+        else:
+            return {"messague": "this task does not belong to you"}
+    except HTTPException:
+        raise HTTPException(status_code=400, detail="Task id invalid")
+
 
 
 @task_router.get("/all")

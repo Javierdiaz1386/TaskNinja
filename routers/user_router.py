@@ -10,6 +10,7 @@ import bcrypt
 ALGORITHM = "HS256"
 TOKEN_DURATION = 1
 SECRET = "a38996063e4db0b313485d7a7cf690325019d16f5913d2f076a3ec20c42abb44"
+
 user_router = APIRouter(prefix="/user",
                         tags=["user"]
                         )
@@ -18,6 +19,14 @@ oauth2 = OAuth2PasswordBearer("/login")
 
 
 def search_userdb(username: str) -> UserDB:
+    """
+
+    Args:
+        username: Username to search in db
+
+    Returns:
+        UserDb: User with information
+    """
     try:
         user = database_user.find_one({"username": username})
         user = user_transform(user)
@@ -27,6 +36,14 @@ def search_userdb(username: str) -> UserDB:
 
 
 def search_user(username: str) -> User:
+    """
+
+    Args:
+        username: User to search in db
+
+    Returns:
+        User: User information not id
+    """
     try:
         user = database_user.find_one({"username": username})
         return User(**user)
@@ -35,6 +52,14 @@ def search_user(username: str) -> User:
 
 
 def auth_user(token: str = Depends(oauth2)) -> str:
+    """
+
+    Args:
+        token: tokenJWT obtained in /login
+
+    Returns:
+        username: return username decode Tokenjwt
+    """
     try:
         username = jwt.decode(token, SECRET, algorithms=[ALGORITHM]).get("username")
         return username
@@ -43,6 +68,14 @@ def auth_user(token: str = Depends(oauth2)) -> str:
 
 
 def current_user(username: str = Depends(auth_user)) -> User:
+    """
+
+    Args:
+        username: Username obtained on auth_user
+
+    Returns:
+        User: object with information the user authenticated
+    """
     if username is None:
         raise HTTPException(status_code=400, detail="Usuario no puede ser None")
     user = search_user(username)
@@ -75,6 +108,14 @@ async def user_create(user: dict) -> User:
 
 @user_router.post("/login")
 async def user_login(user: OAuth2PasswordRequestForm = Depends()) -> dict:
+    """
+
+    Args:
+        user: form with username and password
+
+    Returns: Token JWT
+
+    """
     user_on_db = search_userdb(user.username)
     print(type("s"))
     if not bcrypt.checkpw(user.password.encode(), user_on_db.password):
