@@ -84,7 +84,7 @@ def current_user(username: str = Depends(auth_user)) -> User:
 
 
 @user_router.post("/create")
-async def user_create(user: dict) -> User:
+async def user_create(user: UserDB) -> User:
     """
 
     Args:
